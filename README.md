@@ -18,6 +18,7 @@ In WiFi mode the pendant communicates with FluidNC over WebSockets on your local
 - **Jogging** — multi-axis jog with encoder control, configurable step size, and one-tap axis zeroing
 - **Probing** — Z-probe routine with configurable travel, feed rate, retract, and tool offset
 - **SD File** — browse and run G-code files directly from the FluidNC SD card
+- **Spindle** — start/stop the spindle CW or CCW at a chosen RPM (machine must be Idle)
 - **Macros** — store and execute custom G-code macros from the pendant
 - **Captive portal setup** — configure WiFi credentials directly from your phone or browser
 - **Battery indicator** *(experimental)* — Supported in both M5Dial and CYD versions. *See [this sample project for CYD battery operation](https://github.com/figamore/FigDial)*
@@ -101,6 +102,18 @@ Configurable Z-probe routine. All parameters are editable on-screen before runni
 | Feed Rate | Probing speed (mm/min) |
 | Retract | Distance to retract after contact |
 | Axis | Axis to probe (typically Z) |
+
+### Spindle Scene
+
+Start and stop the spindle in either direction at a chosen RPM. Commands are only sent while the machine is **Idle**; overrides during a job are left to your sender. The top line shows the spindle state FluidNC actually reports.
+
+- **Dial** — set the target RPM. Touch the RPM box to cycle the step size (10 / 100 / 1000)
+- **Direction box** — touch to toggle CW (M3) / CCW (M4). Locked while the spindle is turning
+- **Start / Set** (green) — start the spindle, or apply a new RPM while it is running
+- **Stop** (red) — send M5
+- **Back** (dial button) — return to the menu
+
+The dial is limited to `SPINDLE_MAX_RPM` (default 24000). Change it with a build flag, e.g. `-DSPINDLE_MAX_RPM=30000` in `platformio.local.ini`.
 
 ---
 

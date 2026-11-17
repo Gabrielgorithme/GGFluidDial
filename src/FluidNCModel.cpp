@@ -32,6 +32,10 @@ override_percent_t mySro              = 100;  // Spindle Override
 uint32_t           myFeed             = 0;
 uint32_t           mySpeed            = 0;
 uint32_t           mySelectedTool     = 0;
+spindle_state_t    mySpindleState     = SpindleUnknown;
+
+// True when the status report being parsed contained an "A:" field
+static bool s_report_has_accessories = false;
 
 std::string myModes = "no data";
 
@@ -82,6 +86,7 @@ bool decode_state_string(const char* state_string, state_t& state) {
 void set_disconnected_state() {
     state           = Disconnected;
     my_state_string = "N/C";
+    mySpindleState  = SpindleUnknown;
     jog_window_reset();
 }
 
@@ -133,7 +138,16 @@ bool alarm_is_critical() {
 }
 
 extern "C" void begin_status_report() {
-    myPercent = 0;
+    myPercent                 = 0;
+    s_report_has_accessories = false;
+}
+
+// FluidNC (like Grbl) only sends the "A:" accessory field when something is
+// on, and only in reports that also carry "Ov:".  The parser calls this
+// before show_overrides(), so an Ov report without an A field means "off".
+extern "C" void show_spindle_coolant(int spindle, bool flood, bool mist) {
+    s_report_has_accessories = true;
+    mySpindleState           = spindle == 1 ? SpindleCW : (spindle == 2 ? SpindleCCW : SpindleOff);
 }
 
 extern "C" void show_file(const char* filename, file_percent_t percent) {
@@ -143,6 +157,9 @@ extern "C" void show_file(const char* filename, file_percent_t percent) {
 extern "C" void show_overrides(override_percent_t feed_ovr, override_percent_t rapid_ovr, override_percent_t spindle_ovr) {
     myFro = feed_ovr;
     mySro = spindle_ovr;
+    if (!s_report_has_accessories) {
+        mySpindleState = SpindleOff;
+    }
 }
 
 extern "C" void show_feed_spindle(uint32_t feedrate, uint32_t spindle_speed) {

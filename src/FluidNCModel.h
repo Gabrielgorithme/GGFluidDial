@@ -50,6 +50,15 @@ extern uint32_t           errorExpire;
 extern bool               inInches;
 extern uint32_t           mySelectedTool;
 
+// Actual spindle state as reported by FluidNC (status report "A:" field)
+enum spindle_state_t {
+    SpindleUnknown = -1,  // No override report seen yet since connecting
+    SpindleOff     = 0,
+    SpindleCW      = 1,
+    SpindleCCW     = 2,
+};
+extern spindle_state_t mySpindleState;
+
 int num_digits();
 
 void send_line(const char* s, int timeout = 2000);
